@@ -1,0 +1,919 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_NAME_LENGTH 50
+#define MAX_ADDRESS_LENGTH 100
+#define MAX_PAN_LENGTH 20
+#define MAX_BANK_LENGTH 50
+
+// Structure for Aadhar list
+typedef struct AadharNode
+{
+    char name[MAX_NAME_LENGTH];
+    char address[MAX_ADDRESS_LENGTH];
+    int aadharNumber;
+    struct AadharNode *next;
+} AadharNode;
+
+typedef struct PanNode
+{
+    char name[MAX_NAME_LENGTH];
+    char address[MAX_ADDRESS_LENGTH];
+    char panNumber[MAX_PAN_LENGTH];
+    int aadharNumber;
+    struct PanNode *next;
+} PanNode;
+
+typedef struct BankAccountNode
+{
+    char name[MAX_NAME_LENGTH];
+    char panNumber[MAX_PAN_LENGTH];
+    char bank[MAX_BANK_LENGTH];
+    int aadharNumber; // Added aadharNumber
+    int accountNumber;
+    double depositedAmount;
+    struct BankAccountNode *next;
+} BankAccountNode;
+
+typedef struct LPGNode
+{
+    char name[MAX_NAME_LENGTH];
+    int accountNumber;
+    int aadharNumber;
+    char subsidyStatus[4]; // "YES" or "NO"
+    struct LPGNode *next;
+} LPGNode;
+
+// Function to create a new LPG node
+LPGNode *createLPGNode(char *name, int accountNumber, int aadharNumber, char *subsidyStatus)
+{
+    LPGNode *newNode = (LPGNode *)malloc(sizeof(LPGNode));
+    if (newNode == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+    strcpy(newNode->name, name);
+    newNode->accountNumber = accountNumber;
+    newNode->aadharNumber = aadharNumber;
+    strcpy(newNode->subsidyStatus, subsidyStatus);
+    newNode->next = NULL;
+    return newNode;
+}
+// Function to insert a new LPG node in a sorted manner based on aadhar number
+LPGNode *insertLPGNodeSorted(LPGNode *head, LPGNode *newNode)
+{
+    if (head == NULL || newNode->aadharNumber < head->aadharNumber)
+    {
+        newNode->next = head;
+        return newNode;
+    }
+    else
+    {
+        LPGNode *ptr = head;
+
+        while (ptr->next != NULL && ptr->next->aadharNumber < newNode->aadharNumber)
+        {
+            ptr = ptr->next;
+        }
+
+        newNode->next = ptr->next;
+        ptr->next = newNode;
+
+        return head;
+    }
+}
+// Function to print LPG data stored in the linked list
+void printLPGList(LPGNode *head)
+{
+    // printf("--------------------------------------------------------------\n");
+    printf(" %-20s  %-20s  %-20s  %-20s \n", "NAME", "Aadhar Number", "Account Number", "Subsidy Status");
+    // printf("--------------------------------------------------------------\n");
+
+    while (head != NULL)
+    {
+        printf(" %-20s  %-20d  %-20d  %-20s \n", head->name, head->aadharNumber, head->accountNumber, head->subsidyStatus);
+
+        head = head->next;
+    }
+}
+
+// Function to free memory allocated for linked list nodes
+void freeLPGList(LPGNode *head)
+{
+    while (head != NULL)
+    {
+        LPGNode *temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
+// Function to create a new Bank Account node
+BankAccountNode *createBankAccountNode(char *name, char *panNumber, char *bank, int aadharNumber, int accountNumber, double depositedAmount)
+{
+    BankAccountNode *newNode = (BankAccountNode *)malloc(sizeof(BankAccountNode));
+    if (newNode == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+    strcpy(newNode->name, name);
+    strcpy(newNode->panNumber, panNumber);
+    strcpy(newNode->bank, bank);
+    newNode->aadharNumber = aadharNumber;
+    newNode->accountNumber = accountNumber;
+    newNode->depositedAmount = depositedAmount;
+    newNode->next = NULL;
+    return newNode;
+}
+// Function to insert a new Bank Account node in a sorted manner into the linked list (sorted by aadhar number)
+BankAccountNode *insertBankAccountNode(BankAccountNode *head, BankAccountNode *newNode)
+{
+    if (head == NULL || newNode->aadharNumber < head->aadharNumber)
+    {
+        newNode->next = head;
+        return newNode;
+    }
+    else
+    {
+        BankAccountNode *ptr = head;
+
+        while (ptr->next != NULL && ptr->next->aadharNumber < newNode->aadharNumber)
+        {
+            ptr = ptr->next;
+        }
+
+        newNode->next = ptr->next;
+        ptr->next = newNode;
+
+        return head;
+    }
+}
+// Function to print Bank Account data stored in the linked list
+void printBankAccountList(BankAccountNode *head)
+{
+
+    printf("\n\n%-20s %-20s %-20s %-20s %-20s %-20s \n\n", "NAME", "PAN Number", "Bank", "Aadhar Number", "Account Number", "Deposited Amount");
+    while (head != NULL)
+    {
+        printf("\n%-20s %-20s %-20s %-20d %-20d %-20.2f ", head->name, head->panNumber, head->bank, head->aadharNumber, head->accountNumber, head->depositedAmount);
+
+        head = head->next;
+    }
+    printf("\n\n");
+}
+// Function to free memory allocated for linked list nodes
+void freeBankAccountList(BankAccountNode *head)
+{
+    while (head != NULL)
+    {
+        BankAccountNode *temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
+// Function to create a new PAN node
+PanNode *createPanNode(char *name, char *address, char *panNumber, int aadharNumber)
+{
+    PanNode *newNode = (PanNode *)malloc(sizeof(PanNode));
+    if (newNode == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+    strcpy(newNode->name, name);
+    strcpy(newNode->address, address);
+    strcpy(newNode->panNumber, panNumber);
+    newNode->aadharNumber = aadharNumber;
+    newNode->next = NULL;
+    return newNode;
+}
+// Function to insert a new PAN node in a sorted manner into the linked list based on Aadhar number
+PanNode *insertPanNode(PanNode *head, PanNode *newNode)
+{
+    if (head == NULL || newNode->aadharNumber < head->aadharNumber)
+    {
+        newNode->next = head;
+        return newNode;
+    }
+    else
+    {
+        PanNode *ptr = head;
+
+        while (ptr->next != NULL && ptr->next->aadharNumber < newNode->aadharNumber)
+        {
+            ptr = ptr->next;
+        }
+
+        newNode->next = ptr->next;
+        ptr->next = newNode;
+
+        return head;
+    }
+}
+// Function to print PAN data stored in the linked list
+void printPanList(PanNode *head)
+{
+    printf("\n");
+    printf(" %-20s  %-50s  %-15s  %-20s \n", "NAME", "ADDRESS", "PAN Number", "Aadhar Number");
+    printf("\n");
+
+    while (head != NULL)
+    {
+        printf(" %-20s  %-50s  %-15s  %-20d \n", head->name, head->address, head->panNumber, head->aadharNumber);
+
+        head = head->next;
+    }
+}
+
+// Function to free memory allocated for linked list nodes
+void freePanList(PanNode *head)
+{
+    while (head != NULL)
+    {
+        PanNode *temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
+// Function to create a new Aadhar node
+AadharNode *createAadharNode(char *name, char *address, int aadharNumber)
+{
+    AadharNode *newNode = (AadharNode *)malloc(sizeof(AadharNode));
+    if (newNode == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+    strcpy(newNode->name, name);
+    strcpy(newNode->address, address);
+    newNode->aadharNumber = aadharNumber;
+    newNode->next = NULL;
+    return newNode;
+}
+// Function to insert a new Aadhar node in a sorted manner into the linked list
+
+AadharNode *insertAadharNode(AadharNode *head, AadharNode *newNode)
+{
+
+    if (head == NULL || newNode->aadharNumber < head->aadharNumber)
+    {
+        newNode->next = head;
+        return newNode;
+    }
+    else
+    {
+        AadharNode *ptr = head;
+
+        while (ptr->next != NULL && ptr->next->aadharNumber < newNode->aadharNumber)
+        {
+            ptr = ptr->next;
+        }
+
+        newNode->next = ptr->next;
+        ptr->next = newNode;
+
+        return head;
+    }
+}
+
+// Function to print Aadhar data stored in the linked list
+void printAadharList(AadharNode *head)
+{
+    printf("\n");
+    printf(" %-20s  %-50s  %-20s \n", "NAME", "ADDRESS", "Aadhar Number");
+    printf("\n");
+
+    while (head != NULL)
+    {
+        printf(" %-20s  %-50s  %-20d \n", head->name, head->address, head->aadharNumber);
+
+        head = head->next;
+    }
+}
+
+// Function to free memory allocated for linked list nodes
+void freeAadharList(AadharNode *head)
+{
+    while (head != NULL)
+    {
+        AadharNode *temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
+LPGNode *read_lpglist_sorted(LPGNode *head)
+{
+    FILE *file = fopen("lpg_data.txt", "r");
+
+    if (file == NULL)
+    {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+    else
+    {
+        // Read data from the file and insert it into the linked list
+        char name[MAX_NAME_LENGTH];
+        int accountNumber;
+        int aadharNumber;
+        char subsidyStatus[MAX_NAME_LENGTH];
+        int read = 0;
+        do
+        {
+            read = fscanf(file, "%d | %[^|] | %d | %s |", &aadharNumber, name, &accountNumber, subsidyStatus);
+            if (read == 4)
+            {
+                LPGNode *newNode = createLPGNode(name, accountNumber, aadharNumber, subsidyStatus);
+                head = insertLPGNodeSorted(head, newNode);
+            }
+        } while (!feof(file));
+
+        // Close the file
+        fclose(file);
+    }
+    return head;
+}
+AadharNode *read_aadharlist(AadharNode *head)
+{
+    FILE *file = fopen("aadhar_data.txt", "r");
+
+    if (file == NULL)
+    {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+    else
+    { // Read data from the file and insert it into the linked list
+        char name[MAX_NAME_LENGTH];
+        char address[MAX_ADDRESS_LENGTH];
+        int aadharNumber;
+        int read = 0;
+        do
+        {
+            read = fscanf(file, "%d | %[^|] | %[^|] | ", &aadharNumber, name, address);
+            if (read == 3)
+            {
+                AadharNode *newNode = createAadharNode(name, address, aadharNumber);
+                head = insertAadharNode(head, newNode);
+            }
+        } while (!feof(file));
+
+        // Close the file
+        fclose(file);
+    }
+    return head;
+}
+PanNode *read_panlist(PanNode *head)
+{
+    FILE *file = fopen("pan_data.txt", "r");
+
+    if (file == NULL)
+    {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+    else
+    {
+        // Read data from the file and insert it into the linked list
+        char name[MAX_NAME_LENGTH];
+        char address[MAX_ADDRESS_LENGTH];
+        char panNumber[MAX_PAN_LENGTH];
+        int aadharNumber;
+        int read = 0;
+
+        do
+        {
+            read = fscanf(file, "%d |%[^|] | %[^|]  | %[^|] |", &aadharNumber, name, address, panNumber);
+            if (read == 4)
+            {
+                PanNode *newNode = createPanNode(name, address, panNumber, aadharNumber);
+                head = insertPanNode(head, newNode);
+            }
+        } while (!feof(file));
+
+        // Close the file
+        fclose(file);
+    }
+    return head;
+}
+BankAccountNode *read_bankaccountlist(BankAccountNode *head)
+{
+    FILE *file = fopen("bankaccount_data.txt", "r");
+
+    if (file == NULL)
+    {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+    else
+    {
+        // Read data from the file and insert it into the linked list
+        char name[MAX_NAME_LENGTH];
+        char panNumber[MAX_PAN_LENGTH];
+        char bank[MAX_BANK_LENGTH];
+        int aadharNumber; // Added aadharNumber
+        int accountNumber;
+        double depositedAmount;
+        int read = 0;
+        do
+        {
+            read = fscanf(file, "%d | %[^|] | %[^|] | %d | %lf | %[^|] | ", &aadharNumber, name, bank, &accountNumber, &depositedAmount, panNumber);
+            if (read == 6)
+            {
+                BankAccountNode *newNode = createBankAccountNode(name, panNumber, bank, aadharNumber, accountNumber, depositedAmount);
+                head = insertBankAccountNode(head, newNode);
+            }
+        } while (!feof(file));
+
+        // Close the file
+        fclose(file);
+    }
+    return head;
+}
+BankAccountNode *read_bankaccountlist1(BankAccountNode *head)
+{
+    FILE *file = fopen("bankaccount_data1.txt", "r");
+
+    if (file == NULL)
+    {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+    else
+    {
+        // Read data from the file and insert it into the linked list
+        char name[MAX_NAME_LENGTH];
+        char panNumber[MAX_PAN_LENGTH];
+        char bank[MAX_BANK_LENGTH];
+        int aadharNumber; // Added aadharNumber
+        int accountNumber;
+        double depositedAmount;
+        int read = 0;
+        do
+        {
+            read = fscanf(file, "%d | %[^|] | %[^|] | %d | %lf | %[^|] | ", &aadharNumber, name, bank, &accountNumber, &depositedAmount, panNumber);
+
+            {
+                BankAccountNode *newNode = createBankAccountNode(name, panNumber, bank, aadharNumber, accountNumber, depositedAmount);
+                head = insertBankAccountNode(head, newNode);
+            }
+        } while (!feof(file));
+
+        // Close the file
+        fclose(file);
+    }
+    return head;
+}
+BankAccountNode *read_bankaccountlist2(BankAccountNode *head)
+{
+    FILE *file = fopen("bankaccount_data2.txt", "r");
+
+    if (file == NULL)
+    {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+    else
+    {
+        // Read data from the file and insert it into the linked list
+        char name[MAX_NAME_LENGTH];
+        char panNumber[MAX_PAN_LENGTH];
+        char bank[MAX_BANK_LENGTH];
+        int aadharNumber; // Added aadharNumber
+        int accountNumber;
+        double depositedAmount;
+        int read = 0;
+        do
+        {
+            read = fscanf(file, "%d | %[^|] | %[^|] | %d | %lf | %[^|] | ", &aadharNumber, name, bank, &accountNumber, &depositedAmount, panNumber);
+            if (read == 6)
+            {
+                BankAccountNode *newNode = createBankAccountNode(name, panNumber, bank, aadharNumber, accountNumber, depositedAmount);
+                head = insertBankAccountNode(head, newNode);
+            }
+        } while (!feof(file));
+
+        // Close the file
+        fclose(file);
+    }
+    return head;
+}
+// Function to print names, addresses, and Aadhar numbers of people with Aadhar but no PAN
+void print_Aadhar_Without_PAN(AadharNode *aadharList, PanNode *panList)
+{
+    AadharNode *currentAadhar = aadharList;
+    PanNode *currentPAN = panList;
+
+    printf("\nPeople with Aadhar numbers but no PAN numbers:\n");
+    printf("| %-20s   %-50s   %-15s  \n", "NAME", "ADDRESS", "Aadhar Number");
+    while (currentAadhar != NULL && currentPAN != NULL)
+    {
+        if (currentPAN->aadharNumber < currentAadhar->aadharNumber)
+        {
+            currentPAN = currentPAN->next;
+        }
+        else if (currentPAN->aadharNumber > currentAadhar->aadharNumber)
+        {
+            printf("  %-20s   %-50s   %-15d  \n", currentAadhar->name, currentAadhar->address, currentAadhar->aadharNumber);
+            currentAadhar = currentAadhar->next;
+        }
+        else
+        {
+            currentPAN = currentPAN->next;
+            currentAadhar = currentAadhar->next;
+        }
+    }
+    // For leftover list when the highest value of Aadhar number is less in PAN list compared to Aadhar list
+    if (currentAadhar != NULL)
+    {
+        while (currentAadhar->next != NULL)
+        {
+            printf("  %-20s   %-30s   %-15d  \n", currentAadhar->name, currentAadhar->address, currentAadhar->aadharNumber);
+            currentAadhar = currentAadhar->next;
+        }
+    }
+    printf("All People with Aadhar numbers but no PAN numbers data printed\n");
+}
+
+void print_People_With_Multiple_PAN(PanNode *panList)
+{
+    PanNode *currentPAN = panList;
+    printf("\nPeople with multiple PAN numbers:\n");
+    // printf("-------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+    printf(" %-20s  %-50s  %-15s  %-15s \n", "NAME", "ADDRESS", "Aadhar Number", "PAN Numbers");
+    // printf("-------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+    while (currentPAN != NULL && currentPAN->next != NULL)
+    {
+        if (currentPAN->aadharNumber == currentPAN->next->aadharNumber)
+        {
+
+            printf(" %-20s  %-50s  %-15d  %-15s \n", currentPAN->name, currentPAN->address, currentPAN->aadharNumber, currentPAN->panNumber);
+
+            // Skip to the next different Aadhar number
+            while (currentPAN->next != NULL && currentPAN->aadharNumber == currentPAN->next->aadharNumber)
+            {
+
+                printf(" %-20s  %-50s  %-15s  %-15s \n", "", "", "", currentPAN->next->panNumber);
+                currentPAN = currentPAN->next;
+            }
+        }
+        else
+        {
+            currentPAN = currentPAN->next;
+        }
+    }
+
+    // printf("-------------------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("All People with multiple PAN numbers data printed\n");
+}
+
+// Function to print names, addresses, and Aadhar numbers of people with multiple bank accounts registered under multiple PAN numbers
+void print_People_With_Multiple_Bank_Accounts(BankAccountNode *bankList)
+{
+    BankAccountNode *currentBank = bankList;
+    printf("\nPeople with multiple bank accounts registered under multiple PAN numbers:\n");
+    printf(" %-15s  %-20s  %-15s  %-15s  %-20s \n", "Aadhar Number", "NAME", "PAN Numbers", "BANK", "Account Number");
+    while (currentBank != NULL && currentBank->next != NULL)
+    {
+        if (currentBank->aadharNumber == currentBank->next->aadharNumber)
+        {
+
+            printf(" %-15d  %-20s  %-15s  %-15s  %-20d \n", currentBank->aadharNumber, currentBank->name, currentBank->panNumber, currentBank->bank, currentBank->accountNumber);
+
+            // Skip to the next different PAN number
+            while (currentBank->next != NULL && currentBank->aadharNumber == currentBank->next->aadharNumber)
+            {
+                printf(" %-15s  %-20s  %-15s  %-15s  %-20d \n", "", "", currentBank->next->panNumber, currentBank->next->bank, currentBank->next->accountNumber);
+                currentBank = currentBank->next;
+            }
+        }
+        currentBank = currentBank->next;
+    }
+    printf("All people with multiple bank accounts registered under multiple PAN numbers data printed\n");
+}
+
+// Function to print details (Aadhar, PAN, all bank-account details) of a person who has availed LPG subsidy
+void print_Details_Of_Person_With_LPG_Subsidy(BankAccountNode *bankList, LPGNode *lpgList)
+{
+    LPGNode *currentLPG = lpgList;
+    BankAccountNode *currentBank = bankList;
+
+    printf("\nDetails of the person who has availed LPG subsidy:\n");
+    printf(" %-15s  %-20s  %-15s  %-15s  %-20s \n", "Aadhar Number", "NAME", "PAN Numbers", "BANK", "Account Number");
+    while (currentLPG != NULL)
+    {
+        if (strcmp(currentLPG->subsidyStatus, "YES") == 0)
+        {
+
+            // Find the corresponding bank account
+            while (currentBank != NULL && currentBank->aadharNumber != currentLPG->aadharNumber)
+            {
+                currentBank = currentBank->next;
+            }
+
+            if (currentBank != NULL)
+            {
+
+                printf(" %-15d  %-20s  %-15s  %-15s  %-20d \n", currentBank->aadharNumber, currentBank->name, currentBank->panNumber, currentBank->bank, currentBank->accountNumber);
+
+                // Print additional PAN numbers
+                while (currentBank->next != NULL && currentBank->aadharNumber == currentBank->next->aadharNumber)
+                {
+
+                    printf(" %-15s  %-20s  %-15s  %-15s  %-20d \n", "", "", currentBank->next->panNumber, currentBank->next->bank, currentBank->next->accountNumber);
+                    currentBank = currentBank->next;
+                }
+            }
+        }
+
+        currentLPG = currentLPG->next;
+    }
+
+    printf("All details of the person who has availed LPG subsidy printed\n");
+}
+
+void print_People_With_High_Savings_And_LPGSubsidy(BankAccountNode *bankList, LPGNode *lpgList, AadharNode *AadharList, double amountX)
+{
+    BankAccountNode *currentBank = bankList;
+    LPGNode *currentLPG = lpgList;
+    AadharNode *currentAadhar = AadharList;
+
+    printf("\nPeople with total savings greater than %.2f and availed LPG subsidy (YES):\n", amountX);
+    printf(" %-20s  %-50s  %-20s  %-20s  %-20s \n", "NAME", "ADDRESS", "Aadhar Number", "Total Savings", "LPG Subsidy");
+    while (currentLPG != NULL)
+    {
+        if (strcmp(currentLPG->subsidyStatus, "YES") == 0)
+        {
+            double totalSavings = 0.0;
+
+            while (currentBank != NULL && currentBank->aadharNumber != currentLPG->aadharNumber)
+            {
+                currentBank = currentBank->next;
+            }
+            // Find the corresponding bank accounts
+            while (currentBank != NULL && currentBank->aadharNumber == currentLPG->aadharNumber)
+            {
+                totalSavings = totalSavings + currentBank->depositedAmount;
+                currentBank = currentBank->next;
+            }
+
+            // Print details if total savings are greater than X
+            if (totalSavings > amountX)
+            {
+                while (currentAadhar != NULL && currentAadhar->aadharNumber != currentLPG->aadharNumber)
+                {
+                    currentAadhar = currentAadhar->next;
+                }
+                printf(" %-20s  %-50s  %-20d  %-20.2f  %-20s \n", currentLPG->name, currentAadhar->address, currentLPG->aadharNumber, totalSavings, currentLPG->subsidyStatus);
+                // printf("-----------------------------------------------------------------------------------------------------------------------\n");
+            }
+        }
+
+        currentLPG = currentLPG->next;
+    }
+
+    printf("\nEnd of list\n");
+}
+
+// similar to polynomial
+BankAccountNode *merge_Bank_Lists(BankAccountNode *lptr1, BankAccountNode *lptr2)
+{
+    BankAccountNode *ptr1, *ptr2, *result, *tail;
+    if (lptr1 == NULL)
+    {
+        result = lptr2;
+    }
+    else if (lptr2 == NULL)
+    {
+        result = lptr1;
+    }
+    else
+    {
+        ptr1 = lptr1;
+        ptr2 = lptr2;
+        if (lptr1->aadharNumber < lptr2->aadharNumber)
+        {
+            result = lptr1;
+            ptr1 = ptr1->next;
+        }
+        else
+        {
+            result = lptr2;
+            ptr2 = ptr2->next;
+        }
+        tail = result;
+        while (ptr1 != NULL && ptr2 != NULL)
+        {
+            if (ptr1->aadharNumber < ptr2->aadharNumber)
+            {
+                tail->next = ptr1;
+                tail = tail->next;
+                ptr1 = ptr1->next;
+            }
+            else
+            {
+                tail->next = ptr2;
+                tail = tail->next;
+                ptr2 = ptr2->next;
+            }
+        }
+        if (ptr1 != NULL)
+        {
+            tail->next = ptr1;
+        }
+        else
+        {
+            tail->next = ptr2;
+        }
+    }
+    return result;
+}
+
+void print_Aadhar_Node(AadharNode *head)
+{
+    printf(" %-20s  %-50s  %-20d \n", head->name, head->address, head->aadharNumber);
+}
+
+void print_Inconsistent_Data(AadharNode *aadharList, PanNode *panList, BankAccountNode *bankList, LPGNode *lpgList)
+{
+    printf("\nInconsistent Data (Different names in Aadhar, PAN, Bank Account, or LPG Connection):\n");
+
+    AadharNode *currentAadhar = aadharList;
+    PanNode *currentPAN = panList;
+    BankAccountNode *currentBank = bankList;
+    LPGNode *currentLPG = lpgList;
+
+    // Traverse through Aadhar database
+    while (currentAadhar != NULL)
+    {
+        int found = 0; // Reset found flag for each Aadhar entry
+
+        // Check for inconsistency in PAN data
+        while (currentPAN != NULL && currentPAN->aadharNumber < currentAadhar->aadharNumber)
+            currentPAN = currentPAN->next;
+
+        while (currentPAN != NULL && currentAadhar->aadharNumber == currentPAN->aadharNumber)
+        {
+            if (strcmp(currentAadhar->name, currentPAN->name) != 0)
+            {
+                printf("\nPan list\n");
+                found = 1;
+            }
+            currentPAN = currentPAN->next;
+        }
+
+        // Check for inconsistency in bank data
+        while (currentBank != NULL && currentAadhar->aadharNumber > currentBank->aadharNumber)
+            currentBank = currentBank->next;
+
+        while (currentBank != NULL && currentAadhar->aadharNumber == currentBank->aadharNumber)
+        {
+            if (strcmp(currentAadhar->name, currentBank->name) != 0)
+            {
+                printf("\nBank List\n");
+                found = 1;
+            }
+            currentBank = currentBank->next;
+        }
+
+        // Check for inconsistency in LPG data
+        while (currentLPG != NULL && currentAadhar->aadharNumber > currentLPG->aadharNumber)
+            currentLPG = currentLPG->next;
+
+        while (currentLPG != NULL && currentAadhar->aadharNumber == currentLPG->aadharNumber)
+        {
+            if (strcmp(currentAadhar->name, currentLPG->name) != 0)
+            {
+                printf("\nLpg list\n");
+                found = 1;
+            }
+            currentLPG = currentLPG->next;
+        }
+
+        if (found == 1)
+        {
+            print_Aadhar_Node(currentAadhar);
+        }
+
+        currentAadhar = currentAadhar->next;
+    }
+    printf("\nAll inconsistent data printed\n");
+}
+
+int main()
+{
+    // Initialize head pointers of linked lists
+    AadharNode *head_aadhar = NULL;
+    PanNode *head_pan = NULL;
+    BankAccountNode *head_bank = NULL;
+    LPGNode *head_lpg = NULL;
+    BankAccountNode *head_bank1 = NULL, *head_bank2 = NULL, *mergelist = NULL;
+    // Read data from files and insert it into the linked lists
+    head_aadhar = read_aadharlist(head_aadhar);
+    head_pan = read_panlist(head_pan);
+    head_bank = read_bankaccountlist(head_bank);
+    head_lpg = read_lpglist_sorted(head_lpg);
+    head_bank1 = read_bankaccountlist1(head_bank1);
+    head_bank2 = read_bankaccountlist2(head_bank2);
+
+    // Print data stored in the linked lists
+    printf("Aadhar data stored in the linked list:\n");
+
+    printf("PAN data stored in the linked list (sorted by Aadhar number):\n");
+
+    printf("Bank Account data stored in the linked list (sorted by aadhar number):\n");
+
+    printf("LPG data stored in the linked list (sorted by aadhar number):\n");
+
+    int i;
+    do
+    {
+        double amount = 0.0;
+        printf("ENTER 1:\t Print data of people having Aadhaar numbers but no PAN numbers\n");
+        printf("ENTER 2:\t Print data of people having Multiple PAN numbers\n");
+        printf("ENTER 3:\t Print data of people having Multiple Bank Accounts\n");
+        printf("ENTER 4:\t Print BANK data of people having LPG subsidy\n");
+        printf("ENTER 5:\t To print people with higher AMOUNT and have subsidy\n");
+        printf("ENTER 6:\t To print inconsistent Data\n");
+        printf("ENTER 7:\t To Merge two Bank lists\n");
+        printf("ENTER 8:\t To print Aadharlist\n");
+        printf("ENTER 9:\t To print PAN list\n");
+        printf("ENTER 10:\t To print Banklist\n");
+        printf("ENTER 11:\t To print LPG list\n");
+        printf("ENTER 12:\t *TO EXIT*\n");
+
+        printf("ENTER your choice: ");
+        scanf("%d", &i);
+
+        switch (i)
+        {
+        case 1:
+            print_Aadhar_Without_PAN(head_aadhar, head_pan);
+            break;
+        case 2:
+            print_People_With_Multiple_PAN(head_pan);
+            break;
+        case 3:
+            print_People_With_Multiple_Bank_Accounts(head_bank);
+            break;
+        case 4:
+            print_Details_Of_Person_With_LPG_Subsidy(head_bank, head_lpg);
+            break;
+        case 5:
+            printf("Enter the amount to check:");
+            scanf("%lf", &amount);
+            print_People_With_High_Savings_And_LPGSubsidy(head_bank, head_lpg, head_aadhar, amount);
+            break;
+        case 6:
+            print_Inconsistent_Data(head_aadhar, head_pan, head_bank, head_lpg);
+            break;
+        case 7:
+            mergelist = merge_Bank_Lists(head_bank1, head_bank2);
+            printBankAccountList(mergelist);
+            break;
+        case 8:
+            printAadharList(head_aadhar);
+
+            break;
+        case 9:
+            printPanList(head_pan);
+
+            break;
+        case 10:
+            printBankAccountList(head_bank);
+
+            break;
+        case 11:
+            printLPGList(head_lpg);
+            break;
+        case 12:
+            printf("\n---------------EXIT-----------------\n");
+            break;
+        default:
+            if (i != 12)
+            {
+                printf("Enter correct option\n");
+                break;
+            }
+        }
+    } while (i != 12);
+
+    // Free memory allocated for linked list nodes
+
+    freeLPGList(head_lpg);
+    freeAadharList(head_aadhar);
+    freePanList(head_pan);
+    freeBankAccountList(head_bank);
+    freeBankAccountList(head_bank1);
+    freeBankAccountList(head_bank2);
+
+    return 0;
+}
